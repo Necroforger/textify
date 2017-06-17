@@ -3,7 +3,10 @@ package textify
 import (
 	"bytes"
 	"image"
+	"io"
 	"strings"
+
+	"image/gif"
 
 	"github.com/disintegration/imaging"
 	"github.com/nfnt/resize"
@@ -72,6 +75,16 @@ func Encode(img image.Image, opts *Options) (string, error) {
 	var out bytes.Buffer
 	err := NewEncoder(&out).Encode(img, opts)
 	return string(out.Bytes()), err
+}
+
+// EncodeGif returns a GifDecoder from which you can receive frames from
+func EncodeGif(gi *gif.GIF, opts *Options) *GifDecoder {
+	rd, wr := io.Pipe()
+	go func() {
+		NewGifEncoder(wr).Encode(gi, opts)
+		wr.Close()
+	}()
+	return NewGifDecoder(rd)
 }
 
 // ColorToText returns a textual representation of the supplied RGB values
