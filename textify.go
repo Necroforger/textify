@@ -78,6 +78,8 @@ func Encode(img image.Image, opts *Options) (string, error) {
 }
 
 // EncodeGif returns a GifDecoder from which you can receive frames from
+//		gi:   Gif to encode
+//		opts: Optional parameters. Leave nil for default.
 func EncodeGif(gi *gif.GIF, opts *Options) *GifDecoder {
 	rd, wr := io.Pipe()
 	go func() {
