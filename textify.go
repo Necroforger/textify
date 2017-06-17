@@ -4,20 +4,23 @@ import (
 	"bytes"
 	"image"
 	"strings"
+
+	"github.com/disintegration/imaging"
+	"github.com/nfnt/resize"
 )
 
 // Text palettes
 var (
 	//Palette characters in order from lightest to darkest, used in converting images.
-	NormalPalette = strings.Split("█▓▒░. ", "")
+	PaletteNormal = strings.Split("█▓▒░. ", "")
 
-	//ReversePalette used for light on black screens.
-	ReversePalette = strings.Split(" .░▒▓█", "")
+	//PaletteReverse used for light on black screens.
+	PaletteReverse = strings.Split(" .░▒▓█", "")
 )
 
 // Options contains optional parameters for converting an image to text
 type Options struct {
-	Palette []string
+	Palette []string // Default: PaletteNormal
 
 	// Resize will resize the image to the supplied Width and Height dimensions when set to true
 	// If one of the width or height values is left as zero, but not both, it will be calculated
@@ -38,24 +41,65 @@ type Options struct {
 	// 		StrideW: 1.
 	//		StrideH: 2.
 	// Stride H is defaulted to two because text characters usually take up two times the width.
-	StrideW uint
-	StrideH uint
+	StrideW float64
+	StrideH float64
+
+	// CropFirst defines if the image should be cropped before or after resizing the image
+	CropFirst bool // Default: false
+
+	// Values for cropping the image.
+	CropLeft, CropRight, CropBottom, CropTop uint // Default: 0
 }
 
 // NewOptions Returns default option parameters
 func NewOptions() *Options {
 	return &Options{
-		Palette: NormalPalette,
-		StrideW: 1,
-		StrideH: 2,
-		Resize:  false,
+		Palette:   PaletteNormal,
+		StrideW:   1,
+		StrideH:   2,
+		Resize:    false,
+		Thumbnail: false,
+		Width:     0,
+		Height:    0,
+		CropFirst: false,
 	}
 }
 
-// Encode encodes an image to text and returns.
+// Encode encodes an image to text and returns a string.
+//		img:  Image interface to encode.
 //		opts: Optional parameters. Leave nil for default.
 func Encode(img image.Image, opts *Options) string {
 	var out bytes.Buffer
 	NewEncoder(&out).Encode(img, opts)
 	return string(out.Bytes())
+}
+
+// ColorToText returns a textual representation of the supplied RGB values
+// By calculating its brightness and returning the corresponding index in the palette.
+//		r: Red value
+//		g: Green value
+//		b: Blue value
+//		palette: Colour palette to use in order from darkest to brightest.
+func ColorToText(r, g, b uint32, palette []string) string {
+	return palette[int((float32((r+g+b)/3)/65535.0)*float32(len(palette)-1))]
+}
+
+func cropImage(img image.Image, opts *Options) *image.NRGBA {
+	var (
+		bounds = img.Bounds()
+		w      = bounds.Dx()
+		h      = bounds.Dy()
+	)
+	return imaging.Crop(img, image.Rect(int(opts.CropLeft), int(opts.CropTop), w-int(opts.CropLeft), h-int(opts.CropRight)))
+}
+
+func resizeImage(img image.Image, opts *Options) image.Image {
+	if opts.Resize && (opts.Width != 0 || opts.Height != 0) {
+		if opts.Thumbnail {
+			return resize.Thumbnail(opts.Width, opts.Height, img, resize.Lanczos3)
+		}
+		return resize.Resize(opts.Width, opts.Height, img, resize.Lanczos3)
+	}
+
+	return img
 }

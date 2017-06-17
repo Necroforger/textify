@@ -21,7 +21,7 @@ func NewEncoder(dest io.Writer) *Encoder {
 // Encode writes an image as text the the encoders destination writer.
 //		img:  Image to encode to text.
 //		Opts: Optional encoding parameters. Leave nil to use default encoding options.
-func (e Encoder) Encode(img image.Image, opts *Options) {
+func (e Encoder) Encode(img image.Image, opts *Options) error {
 	var (
 		bounds = img.Bounds()
 		w      = bounds.Dx()
@@ -31,36 +31,39 @@ func (e Encoder) Encode(img image.Image, opts *Options) {
 		opts = NewOptions()
 	}
 
-	if opts.Resize && (opts.Width != 0 && opts.Height != 0) {
-		if opts.Thumbnail {
-			img = resize.Thumbnail(opts.Width/opts.StrideW, opts.Height/opts.StrideH, img, resize.Lanczos3)
-		} else {
-			img = resize.Resize(opts.Width/opts.StrideW, opts.Height/opts.StrideH, img, resize.Lanczos3)
+	// Crop and resize images in the requested order.
+	if opts.CropFirst {
+		img = cropImage(img, opts)
+		if opts.Resize {
+			img = resizeImage(img, opts)
 		}
 	} else {
-		if opts.Thumbnail {
-			img = resize.Thumbnail(uint(w)/opts.StrideW, uint(h)/opts.StrideH, img, resize.Lanczos3)
-		} else {
-			img = resize.Resize(uint(w)/opts.StrideW, uint(h)/opts.StrideH, img, resize.Lanczos3)
+		if opts.Resize {
+			img = resizeImage(img, opts)
 		}
+		img = cropImage(img, opts)
 	}
 
+	// Resize the image to accomodate for character size.
+	if opts.StrideH > 1 || opts.StrideW > 1 {
+		bounds = img.Bounds()
+		img = resize.Resize(uint(float64(bounds.Dx())/opts.StrideW), uint(float64(bounds.Dy())/opts.StrideH), img, resize.Lanczos3)
+	}
+
+	bounds = img.Bounds()
+	w, h = bounds.Dx(), bounds.Dy()
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			r, g, b, _ := img.At(x, y).RGBA()
-			e.Dest.Write([]byte(ColorToText(r, g, b, opts.Palette)))
+			_, err := e.Dest.Write([]byte(ColorToText(r, g, b, opts.Palette)))
+			if err != nil {
+				return err
+			}
 		}
-		e.Dest.Write([]byte("\r\n"))
+		_, err := e.Dest.Write([]byte("\r\n"))
+		if err != nil {
+			return err
+		}
 	}
-
-}
-
-// ColorToText returns a textual representation of the supplied RGB values
-// By calculating its brightness and returning the corresponding index in the palette.
-//		r: Red value
-//		g: Green value
-//		b: Blue value
-//		palette: Colour palette to use in order from darkest to brightest.
-func ColorToText(r, g, b uint32, palette []string) string {
-	return palette[int((float32((r+g+b)/3)/65535.0)*float32(len(palette)-1))]
+	return nil
 }
