@@ -3,7 +3,6 @@ package textify
 import (
 	"bytes"
 	"image"
-	"log"
 	"strings"
 
 	"github.com/disintegration/imaging"
@@ -97,10 +96,8 @@ func cropImage(img image.Image, opts *Options) *image.NRGBA {
 func resizeImage(img image.Image, opts *Options) image.Image {
 	if opts.Resize && (opts.Width != 0 || opts.Height != 0) {
 		if opts.Thumbnail {
-			log.Println("Resize thumbnail")
 			return resize.Thumbnail(opts.Width, opts.Height, img, resize.Lanczos3)
 		}
-		log.Println("Resize normal")
 		return resize.Resize(opts.Width, opts.Height, img, resize.Lanczos3)
 	}
 
