@@ -3,6 +3,7 @@ package textify
 import (
 	"bytes"
 	"image"
+	"log"
 	"strings"
 
 	"github.com/disintegration/imaging"
@@ -68,10 +69,10 @@ func NewOptions() *Options {
 // Encode encodes an image to text and returns a string.
 //		img:  Image interface to encode.
 //		opts: Optional parameters. Leave nil for default.
-func Encode(img image.Image, opts *Options) string {
+func Encode(img image.Image, opts *Options) (string, error) {
 	var out bytes.Buffer
-	NewEncoder(&out).Encode(img, opts)
-	return string(out.Bytes())
+	err := NewEncoder(&out).Encode(img, opts)
+	return string(out.Bytes()), err
 }
 
 // ColorToText returns a textual representation of the supplied RGB values
@@ -96,8 +97,10 @@ func cropImage(img image.Image, opts *Options) *image.NRGBA {
 func resizeImage(img image.Image, opts *Options) image.Image {
 	if opts.Resize && (opts.Width != 0 || opts.Height != 0) {
 		if opts.Thumbnail {
+			log.Println("Resize thumbnail")
 			return resize.Thumbnail(opts.Width, opts.Height, img, resize.Lanczos3)
 		}
+		log.Println("Resize normal")
 		return resize.Resize(opts.Width, opts.Height, img, resize.Lanczos3)
 	}
 
