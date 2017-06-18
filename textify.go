@@ -96,7 +96,7 @@ func EncodeGif(gi *gif.GIF, opts *Options) *GifDecoder {
 //		b: Blue value
 //		palette: Colour palette to use in order from darkest to brightest.
 func ColorToText(r, g, b uint32, palette []string) string {
-	return palette[int((float32((r+g+b)/3)/65535.0)*float32(len(palette)-1))]
+	return palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)-1))]
 }
 
 func cropImage(img image.Image, opts *Options) *image.NRGBA {
