@@ -1,6 +1,7 @@
 package textify
 
 import (
+	"bufio"
 	"bytes"
 	"image"
 	"io"
@@ -86,7 +87,8 @@ func EncodeGif(gi *gif.GIF, opts *Options) *GifDecoder {
 		NewGifEncoder(wr).Encode(gi, opts)
 		wr.Close()
 	}()
-	return NewGifDecoder(rd)
+	reader := bufio.NewReaderSize(rd, 5012)
+	return NewGifDecoder(reader)
 }
 
 // ColorToText returns a textual representation of the supplied RGB values
@@ -96,7 +98,7 @@ func EncodeGif(gi *gif.GIF, opts *Options) *GifDecoder {
 //		b: Blue value
 //		palette: Colour palette to use in order from darkest to brightest.
 func ColorToText(r, g, b uint32, palette []string) string {
-	return palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)-1))]
+	return palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)))]
 }
 
 func cropImage(img image.Image, opts *Options) *image.NRGBA {
