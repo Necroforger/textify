@@ -27,6 +27,7 @@ var (
 
 	IsGif   = flag.Bool("g", false, "Encode the image as a gif")
 	PlayGif = flag.Bool("pg", false, "Play the supplied gif image")
+	NoLoop  = flag.Bool("nl", false, "Will not loop gifs when playing them")
 
 	CropLeft   = flag.Uint("cl", 0, "Crop left parameter")
 	CropRight  = flag.Uint("cr", 0, "Crop right parameter")
@@ -135,14 +136,21 @@ func main() {
 
 		lastWrite := time.Now()
 		for frame, delay, err = decoder.NextFrame(); err == nil; frame, delay, err = decoder.NextFrame() {
-			// Do not allow the gif to display too fast while rendering.
+			// Display frames at correct time.
 			if d, u := (time.Millisecond * 10 * time.Duration(delay)), time.Now().Sub(lastWrite); u < d {
 				time.Sleep(d - u)
 			}
-			frames = append(frames, Frame{Text: frame, Delay: delay})
+			if !*NoLoop {
+				frames = append(frames, Frame{Text: frame, Delay: delay})
+			}
 			fmt.Fprintln(Dest, frame)
 			lastWrite = time.Now()
 		}
+
+		if *NoLoop {
+			return
+		}
+
 		for {
 			for _, f := range frames {
 				fmt.Fprintln(Dest, f.Text)
