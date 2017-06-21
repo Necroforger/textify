@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -26,8 +27,13 @@ var (
 	StrideH   = flag.Float64("sh", 2, "Stride height parameter")
 
 	IsGif   = flag.Bool("g", false, "Encode the image as a gif")
-	PlayGif = flag.Bool("pg", false, "Play the supplied gif image")
-	NoLoop  = flag.Bool("nl", false, "Will not loop gifs when playing them")
+	IsVideo = flag.Bool("v", false, "Encode from video")
+	UseYTDL = flag.Bool("yt", false, "Use youtube-dl to download the video")
+	FPS     = flag.Float64("fps", 10, "Video fps")
+
+	PlayVideo = flag.Bool("pv", false, "Play the supplied video")
+	PlayGif   = flag.Bool("pg", false, "Play the supplied gif image")
+	NoLoop    = flag.Bool("nl", false, "Will not loop gifs when playing them")
 
 	CropLeft   = flag.Uint("cl", 0, "Crop left parameter")
 	CropRight  = flag.Uint("cr", 0, "Crop right parameter")
@@ -68,15 +74,49 @@ func main() {
 	}
 
 	path := flag.Arg(0)
-	if !strings.HasPrefix(path, "http://") && !strings.HasPrefix(path, "https://") {
-		f, err := os.Open(path)
+	///////////////////
+	//	Video
+	//////////////////
+	if *IsVideo || *PlayVideo {
+
+		input := path
+		if *UseYTDL {
+			input = "pipe:0"
+		}
+
+		ff := exec.Command("ffmpeg", "-i", input, "-vf", "fps="+fmt.Sprint(*FPS), "-f", "image2pipe", "pipe:1")
+		out, err := ff.StdoutPipe()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		defer f.Close()
-		Source = f
-	} else {
+		Source = out
+
+		if *UseYTDL {
+			yt := exec.Command("youtube-dl", "-f", "bestvideo", "-o", "-", path)
+			ytout, err := yt.StdoutPipe()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			ff.Stdin = ytout
+			err = yt.Start()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
+
+		err = ff.Start()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		/////////////////////////
+		// HTTP
+		/////////////////////////
+	} else if strings.HasPrefix(path, "http://") && strings.HasPrefix(path, "https://") {
 		resp, err := http.Get(path)
 		if err != nil {
 			log.Println(err)
@@ -84,31 +124,49 @@ func main() {
 		}
 		defer resp.Body.Close()
 		Source = resp.Body
+
+		/////////////////////////
+		// File
+		////////////////////////
+	} else {
+		f, err := os.Open(path)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer f.Close()
+		Source = f
 	}
 
+	//////////////////////////////////////////////
+	//          Decode image
+	//////////////////////////////////////////////
 	var (
 		img    image.Image
 		gifimg *gif.GIF
 	)
 
-	// Decode as image
-	if !*IsGif && !*PlayGif {
-		img, _, err = image.Decode(Source)
-		if err != nil {
-			log.Println(err)
-			return
-		}
+	if !*PlayVideo && !*IsVideo {
+		if !*IsGif && !*PlayGif {
+			img, _, err = image.Decode(Source)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-		// Decode as gif
-	} else {
-		gifimg, err = gif.DecodeAll(Source)
-		if err != nil {
-			log.Println(err)
-			return
+			// Decode as gif
+		} else {
+			gifimg, err = gif.DecodeAll(Source)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 
-	// Initialize destination stream
+	////////////////////////////////////////
+	//       Create Destination writer
+	///////////////////////////////////////
 	if *OutputPath != "" {
 		f, err := os.OpenFile(*OutputPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
 		if err != nil {
@@ -120,6 +178,10 @@ func main() {
 	} else {
 		Dest = os.Stdout
 	}
+
+	//////////////////////////////////////////////
+	//           Play Gif
+	//////////////////////////////////////////////
 
 	if *PlayGif {
 		type Frame struct {
@@ -159,13 +221,51 @@ func main() {
 		}
 	}
 
+	///////////////////////////////////////////
+	//            Play video
+	///////////////////////////////////////////
+	if *PlayVideo {
+		for {
+			decodeStart := time.Now()
+			img, _, err := image.Decode(Source)
+			if err != nil {
+				log.Println(err)
+				if err == image.ErrFormat {
+					continue
+				}
+				return
+			}
+			text, _ := textify.Encode(img, Options)
+			fmt.Fprintln(Dest, text)
+			if d, u := time.Now().Sub(decodeStart), (time.Millisecond * time.Duration((1.0 / *FPS)*1000)); d < u {
+				time.Sleep(u - d)
+			}
+		}
+	}
+
+	////////////////////////////////////////
+	//    Write to destination
+	////////////////////////////////////////
 	// Using a buffered writer helps to display the image to the console smoother.
 	bufwriter := bufio.NewWriterSize(Dest, 2048)
 
-	// Encode gif
 	if *IsGif {
 		err = textify.NewGifEncoder(bufwriter).Encode(gifimg, Options)
-		// Encode image
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	} else if *IsVideo {
+		for {
+			img, _, err := image.Decode(Source)
+			if err != nil {
+				if err == image.ErrFormat {
+					continue
+				}
+				return
+			}
+			textify.NewEncoder(bufwriter).Encode(img, Options)
+		}
 	} else {
 		err = textify.NewEncoder(bufwriter).Encode(img, Options)
 		if err != nil {
