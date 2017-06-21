@@ -92,20 +92,55 @@ func main() {
 			log.Println(err)
 			return
 		}
+
 		Source = out
 
 		if *UseYTDL {
-			yt := exec.Command("youtube-dl", "-f", "bestvideo", "-o", "-", path)
+			log.Println("Use youtubeDL")
+
+			yt := exec.Command("youtube-dl", "-f", "best", "-o", "-", path)
 			ytout, err := yt.StdoutPipe()
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			ff.Stdin = ytout
+
+			var videoStream io.Reader
+			if *PlayAudio {
+				sourceR, sourceW := io.Pipe()
+				audioR, audioW := io.Pipe()
+
+				go func() {
+					writer := bufio.NewWriterSize(io.MultiWriter(sourceW, audioW), 102400)
+					defer writer.Flush()
+					_, err := io.Copy(writer, ytout)
+					if err != nil {
+						log.Println(err)
+						os.Exit(1)
+					}
+				}()
+
+				AudioSource = audioR
+				videoStream = sourceR
+			} else {
+				videoStream = ytout
+			}
+
+			ff.Stdin = videoStream
 			err = yt.Start()
 			if err != nil {
 				log.Println(err)
 				return
+			}
+			log.Println("Set up youtube streams")
+		} else {
+			if *PlayAudio {
+				aout, err := os.Open(path)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				AudioSource = aout
 			}
 		}
 
@@ -227,6 +262,15 @@ func main() {
 	//            Play video
 	///////////////////////////////////////////
 	if *PlayVideo {
+		if *PlayAudio {
+			ffplay := exec.Command("ffplay", "-nodisp", "-i", "-")
+			ffplay.Stdin = AudioSource
+			err := ffplay.Start()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
 		for {
 			decodeStart := time.Now()
 			img, _, err := image.Decode(Source)
