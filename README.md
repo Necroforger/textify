@@ -20,6 +20,7 @@ In the following examples, the height parameter is not set so that it will be ca
 `textify -w 236 -pg http://i.imgur.com/v9Yz47F.gif`
 
 ## View a single image
+If you don't use the `-g` flag it will read and conver the first image in the gif.
 `textify -w 236 http://i.imgur.com/v9Yz47F.gif`
 
 ## Write gif to file

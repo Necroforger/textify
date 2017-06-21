@@ -69,7 +69,7 @@ func main() {
 
 	path := flag.Arg(0)
 	if !strings.HasPrefix(path, "http://") && !strings.HasPrefix(path, "https://") {
-		f, err := os.Open(flag.Arg(0))
+		f, err := os.Open(path)
 		if err != nil {
 			log.Println(err)
 			return
