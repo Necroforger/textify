@@ -275,10 +275,6 @@ func main() {
 			decodeStart := time.Now()
 			img, _, err := image.Decode(Source)
 			if err != nil {
-				if err == image.ErrFormat {
-					log.Println(err)
-					return
-				}
 				return
 			}
 			text, _ := textify.Encode(img, Options)
@@ -306,10 +302,9 @@ func main() {
 			img, _, err := image.Decode(Source)
 			if err != nil {
 				if err == image.ErrFormat {
-					log.Println(err)
 					break
 				}
-				return
+				continue
 			}
 			textify.NewEncoder(bufwriter).Encode(img, Options)
 		}
