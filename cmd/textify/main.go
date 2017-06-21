@@ -96,8 +96,6 @@ func main() {
 		Source = out
 
 		if *UseYTDL {
-			log.Println("Use youtubeDL")
-
 			yt := exec.Command("youtube-dl", "-f", "best", "-o", "-", path)
 			ytout, err := yt.StdoutPipe()
 			if err != nil {
@@ -132,7 +130,6 @@ func main() {
 				log.Println(err)
 				return
 			}
-			log.Println("Set up youtube streams")
 		} else {
 			if *PlayAudio {
 				aout, err := os.Open(path)
