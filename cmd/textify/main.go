@@ -33,6 +33,7 @@ var (
 
 	PlayVideo = flag.Bool("pv", false, "Play the supplied video")
 	PlayGif   = flag.Bool("pg", false, "Play the supplied gif image")
+	PlayAudio = flag.Bool("pa", false, "Play audio using ffplay")
 	NoLoop    = flag.Bool("nl", false, "Will not loop gifs when playing them")
 
 	CropLeft   = flag.Uint("cl", 0, "Crop left parameter")
@@ -44,8 +45,9 @@ var (
 	Palette    = flag.String("p", strings.Join(textify.PaletteReverse, ""), "Palette parameter")
 	OutputPath = flag.String("o", "", "File output path parameter, If not set, will be set to stdout")
 
-	Dest   io.Writer
-	Source io.Reader
+	Dest        io.Writer
+	Source      io.Reader
+	AudioSource io.Reader
 
 	Options *textify.Options
 )
@@ -84,7 +86,7 @@ func main() {
 			input = "pipe:0"
 		}
 
-		ff := exec.Command("ffmpeg", "-i", input, "-vf", "fps="+fmt.Sprint(*FPS), "-f", "image2pipe", "pipe:1")
+		ff := exec.Command("ffmpeg", "-i", input, "-vf", "fps="+fmt.Sprint(*FPS), "-c:v", "bmp", "-f", "rawvideo", "pipe:1")
 		out, err := ff.StdoutPipe()
 		if err != nil {
 			log.Println(err)
@@ -229,9 +231,9 @@ func main() {
 			decodeStart := time.Now()
 			img, _, err := image.Decode(Source)
 			if err != nil {
-				log.Println(err)
 				if err == image.ErrFormat {
-					continue
+					log.Println(err)
+					return
 				}
 				return
 			}
@@ -260,7 +262,8 @@ func main() {
 			img, _, err := image.Decode(Source)
 			if err != nil {
 				if err == image.ErrFormat {
-					continue
+					log.Println(err)
+					break
 				}
 				return
 			}
