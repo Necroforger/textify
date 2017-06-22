@@ -5,9 +5,12 @@ ______
 
 - [Textify](#textify)
 - [Command Line](#command-line)
+    - [Video dependencies](#video-dependencies)
     - [View a gif](#view-a-gif)
     - [View a single image](#view-a-single-image)
     - [Write gif to file](#write-gif-to-file)
+    - [View a youtube video with audio](#view-a-youtube-video-with-audio)
+    - [Encode a youtube video to a file](#encode-a-youtube-video-to-a-file)
     - [Flags](#flags)
 - [Options struct](#options-struct)
 
@@ -16,15 +19,27 @@ ______
 # Command Line
 In the following examples, the height parameter is not set so that it will be calculated to preserve the aspect ratio of the image. The URL can be either a local file or an http link.
 
+## Video dependencies
+The following must be installed to path to use the video features.
+[youtube-dl](https://rg3.github.io/youtube-dl/)
+[ffmpeg](https://ffmpeg.org/)
+
 ## View a gif
 `textify -w 236 -pg http://i.imgur.com/v9Yz47F.gif`
 
 ## View a single image
 If you don't use the `-g` flag it will read and conver the first image in the gif.
+
 `textify -w 236 http://i.imgur.com/v9Yz47F.gif`
 
 ## Write gif to file
 `textify -w 236 -g -o "gif.txt" http://i.imgur.com/v9Yz47F.gif`
+
+## View a youtube video with audio
+`textify -w 236 -pv -pa -yt https://youtu.be/UkgK8eUdpAo`
+
+## Encode a youtube video to a file
+`textify -w 236 -v -o "bad_apple.txt" https://youtu.be/UkgK8eUdpAo`
 
 
 ## Flags
@@ -38,7 +53,10 @@ If you don't use the `-g` flag it will read and conver the first image in the gi
 | sw        | Compensates for the width of a character. `Default (1)`                                                                                                               |
 | sh        | Compensates for the height of a character `Default (2)` Text characters are usually twice as tall as they are wide.                                                   |
 | g         | Encode every frame of the supplied gif image. If not set to true, it will convert the first frame of the image                                                        |
+| yt        | Specifies that the supplied path should be retrieved with youtube-dl. Requires that youtube-dl be installed to path.                                                  |
 | pg        | Play the gif to the output destination, which is stdout by default                                                                                                    |
+| pv        | Play the video given by the path. Requires that ffmpeg be installed to path                                                                                           |
+| pa        | Play the video's audio. Requires that ffplay be installed to path                                                                                                     |
 | nl        | No loop, do not loop the gif when playing using pg                                                                                                                    |
 | cl        | Crops `n` pixels from the left of the image                                                                                                                           |
 | cr        | Crops `n` pixels from the right of the image                                                                                                                          |
