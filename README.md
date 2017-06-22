@@ -20,7 +20,7 @@ ______
 In the following examples, the height parameter is not set so that it will be calculated to preserve the aspect ratio of the image. The URL can be either a local file or an http link.
 
 ## Video dependencies
-The following must be installed to path.
+The following must be installed to path to use the video feautures.
 * [youtube-dl](https://rg3.github.io/youtube-dl/)
 * [ffmpeg](https://ffmpeg.org/)
 
@@ -28,8 +28,6 @@ The following must be installed to path.
 `textify -w 236 -pg http://i.imgur.com/v9Yz47F.gif`
 
 ## View a single image
-If you don't use the `-g` flag it will read and conver the first image in the gif.
-
 `textify -w 236 http://i.imgur.com/v9Yz47F.gif`
 
 ## Encode gif as text to file
@@ -39,7 +37,6 @@ If you don't use the `-g` flag it will read and conver the first image in the gi
 `textify -w 236 -pv -pa -yt https://youtu.be/UkgK8eUdpAo`
 
 <img src="https://i.imgur.com/CM6V2TE.gif" width="50%"></img>
-
 
 ## Encode a youtube video to a file
 `textify -w 236 -v -o "bad_apple.txt" https://youtu.be/UkgK8eUdpAo`
