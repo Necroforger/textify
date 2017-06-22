@@ -20,9 +20,9 @@ ______
 In the following examples, the height parameter is not set so that it will be calculated to preserve the aspect ratio of the image. The URL can be either a local file or an http link.
 
 ## Video dependencies
-The following must be installed to path to use the video features.
-[youtube-dl](https://rg3.github.io/youtube-dl/)
-[ffmpeg](https://ffmpeg.org/)
+The following must be installed to path.
+* [youtube-dl](https://rg3.github.io/youtube-dl/)
+* [ffmpeg](https://ffmpeg.org/)
 
 ## View a gif
 `textify -w 236 -pg http://i.imgur.com/v9Yz47F.gif`
