@@ -6,20 +6,20 @@ import (
 	"image/gif"
 	"io"
 	"strconv"
-
-	"github.com/nfnt/resize"
 )
 
 // GifEncoder ...
 type GifEncoder struct {
-	Dest io.Writer
+	Dest        io.Writer
+	textencoder *Encoder
 }
 
 // NewGifEncoder ...
 //		dest: Destination io.writer to encode to
 func NewGifEncoder(dest io.Writer) *GifEncoder {
 	return &GifEncoder{
-		Dest: dest,
+		Dest:        dest,
+		textencoder: NewEncoder(dest),
 	}
 }
 
@@ -35,14 +35,9 @@ func (e *GifEncoder) Encode(gi *gif.GIF, opts *Options) error {
 	for i, v := range gi.Image {
 		draw.Draw(currentFrame, currentFrame.Bounds(), v, image.ZP, draw.Over)
 
-		var resizedImage image.Image = currentFrame
-		if opts.Resize {
-			resizedImage = resizeImage(resizedImage, opts)
-		}
-
-		if opts.StrideH > 1 || opts.StrideW > 1 {
-			bounds := resizedImage.Bounds()
-			resizedImage = resize.Resize(uint(float64(bounds.Dx())/opts.StrideW), uint(float64(bounds.Dy())/opts.StrideH), resizedImage, resize.Lanczos3)
+		err := e.EncodeFrame(currentFrame, gi.Delay[i], opts)
+		if err != nil {
+			return err
 		}
 
 		switch gi.Disposal[i] {
@@ -53,30 +48,30 @@ func (e *GifEncoder) Encode(gi *gif.GIF, opts *Options) error {
 		case gif.DisposalPrevious:
 		default:
 		}
+	}
 
-		// Text conversion
-		bounds := resizedImage.Bounds()
-		_, err := e.Dest.Write([]byte(strconv.Itoa(gi.Delay[i]) + "\r\n"))
-		if err != nil {
-			return err
-		}
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			for x := bounds.Min.X; x < bounds.Max.X; x++ {
-				r, g, b, _ := resizedImage.At(x, y).RGBA()
-				_, err := e.Dest.Write([]byte(ColorToText(r, g, b, opts.Palette)))
-				if err != nil {
-					return err
-				}
-			}
-			_, err := e.Dest.Write([]byte("\r\n"))
-			if err != nil {
-				return err
-			}
-		}
-		_, err = e.Dest.Write([]byte("\r\n"))
-		if err != nil {
-			return err
-		}
+	return nil
+}
+
+// EncodeFrame writes a frame to the destination
+func (e *GifEncoder) EncodeFrame(img image.Image, delay int, opts *Options) error {
+	if opts == nil {
+		opts = NewOptions()
+	}
+
+	_, err := e.Dest.Write([]byte(strconv.Itoa(delay) + "\r\n"))
+	if err != nil {
+		return err
+	}
+
+	err = e.textencoder.Encode(img, opts)
+	if err != nil {
+		return err
+	}
+
+	_, err = e.Dest.Write([]byte("\r\n"))
+	if err != nil {
+		return err
 	}
 
 	return nil

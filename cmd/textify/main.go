@@ -109,7 +109,7 @@ func main() {
 				audioR, audioW := io.Pipe()
 
 				go func() {
-					writer := bufio.NewWriterSize(io.MultiWriter(sourceW, audioW), 102400)
+					writer := bufio.NewWriterSize(io.MultiWriter(sourceW, audioW), 1024)
 					defer writer.Flush()
 					_, err := io.Copy(writer, ytout)
 					if err != nil {
@@ -150,7 +150,7 @@ func main() {
 		/////////////////////////
 		// HTTP
 		/////////////////////////
-	} else if strings.HasPrefix(path, "http://") && strings.HasPrefix(path, "https://") {
+	} else if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		resp, err := http.Get(path)
 		if err != nil {
 			log.Println(err)
@@ -295,6 +295,7 @@ func main() {
 			return
 		}
 	} else if *IsVideo {
+		gifencoder := textify.NewGifEncoder(Dest)
 		for {
 			img, _, err := image.Decode(Source)
 			if err != nil {
@@ -303,7 +304,7 @@ func main() {
 				}
 				continue
 			}
-			textify.NewEncoder(bufwriter).Encode(img, Options)
+			gifencoder.EncodeFrame(img, int((1.0 / *FPS)*100), Options)
 		}
 	} else {
 		err = textify.NewEncoder(bufwriter).Encode(img, Options)
