@@ -8,7 +8,7 @@ ______
     - [Video dependencies](#video-dependencies)
     - [View a gif](#view-a-gif)
     - [View a single image](#view-a-single-image)
-    - [Write gif to file](#write-gif-to-file)
+    - [Encode gif as text to file](#encode-gif-as-text-to-file)
     - [View a youtube video with audio](#view-a-youtube-video-with-audio)
     - [Encode a youtube video to a file](#encode-a-youtube-video-to-a-file)
     - [Flags](#flags)
@@ -32,11 +32,14 @@ If you don't use the `-g` flag it will read and conver the first image in the gi
 
 `textify -w 236 http://i.imgur.com/v9Yz47F.gif`
 
-## Write gif to file
+## Encode gif as text to file
 `textify -w 236 -g -o "gif.txt" http://i.imgur.com/v9Yz47F.gif`
 
 ## View a youtube video with audio
 `textify -w 236 -pv -pa -yt https://youtu.be/UkgK8eUdpAo`
+
+<img src="https://i.imgur.com/CM6V2TE.gif" width="50%"></img>
+
 
 ## Encode a youtube video to a file
 `textify -w 236 -v -o "bad_apple.txt" https://youtu.be/UkgK8eUdpAo`
