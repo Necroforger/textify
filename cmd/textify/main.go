@@ -34,6 +34,7 @@ var (
 	PlayVideo = flag.Bool("pv", false, "Play the supplied video")
 	PlayGif   = flag.Bool("pg", false, "Play the supplied gif image")
 	PlayAudio = flag.Bool("pa", false, "Play audio using ffplay")
+	PlayText  = flag.Bool("pt", false, "Play the supplied text file.")
 	NoLoop    = flag.Bool("nl", false, "Will not loop gifs when playing them")
 
 	CropLeft   = flag.Uint("cl", 0, "Crop left parameter")
@@ -73,6 +74,11 @@ func main() {
 	if flag.Arg(0) == "" {
 		log.Println("No file path path provided.")
 		return
+	}
+
+	// PlayText should also enable *PlayGif
+	if *PlayText {
+		*PlayGif = true
 	}
 
 	path := flag.Arg(0)
@@ -180,7 +186,7 @@ func main() {
 		gifimg *gif.GIF
 	)
 
-	if !*PlayVideo && !*IsVideo {
+	if !*PlayVideo && !*IsVideo && !*PlayText {
 		if !*IsGif && !*PlayGif {
 			img, _, err = image.Decode(Source)
 			if err != nil {
@@ -223,7 +229,13 @@ func main() {
 			Text  string
 		}
 		frames := []Frame{}
-		decoder := textify.EncodeGif(gifimg, Options)
+
+		var decoder *textify.GifDecoder
+		if *PlayText {
+			decoder = textify.NewGifDecoder(Source)
+		} else {
+			decoder = textify.EncodeGif(gifimg, Options)
+		}
 		var (
 			frame string
 			err   error
