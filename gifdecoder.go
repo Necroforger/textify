@@ -10,12 +10,16 @@ import (
 // GifDecoder ...
 type GifDecoder struct {
 	Source io.Reader
+	reader *bufio.Reader
 }
 
 // NewGifDecoder ...
 //		source: Reader source to decode image from
 func NewGifDecoder(source io.Reader) *GifDecoder {
-	return &GifDecoder{Source: source}
+	return &GifDecoder{
+		Source: source,
+		reader: bufio.NewReader(source),
+	}
 }
 
 // DecodeAll decodes encoded gifs from their textual representations into an
@@ -30,10 +34,8 @@ func (d *GifDecoder) DecodeAll() (frames []string, delays []int, err error) {
 
 // NextFrame retrieves the next frame and delay from the source reader.
 func (d *GifDecoder) NextFrame() (frame string, delay int, err error) {
-	reader := bufio.NewReader(d.Source)
-
 	var line string
-	line, err = reader.ReadString('\n')
+	line, err = d.reader.ReadString('\n')
 	if err != nil {
 		return
 	}
@@ -43,7 +45,7 @@ func (d *GifDecoder) NextFrame() (frame string, delay int, err error) {
 	}
 
 	for {
-		line, err = reader.ReadString('\n')
+		line, err = d.reader.ReadString('\n')
 		if err != nil {
 			return
 		}
