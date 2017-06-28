@@ -316,7 +316,7 @@ func main() {
 				}
 				continue
 			}
-			gifencoder.EncodeFrame(img, int(*FPS), Options)
+			gifencoder.EncodeFrame(img, int((1.0 / *FPS)*100), Options)
 		}
 	} else {
 		err = textify.NewEncoder(bufwriter).Encode(img, Options)
