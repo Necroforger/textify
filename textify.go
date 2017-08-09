@@ -20,6 +20,12 @@ var (
 
 	//PaletteReverse used for light on black screens.
 	PaletteReverse = strings.Split(" .░▒▓█", "")
+
+	//PaletteAsciiNormal is an ascii palette from darkest to lightest
+	PaletteASCIIReverse = strings.Split(" .:-=+*#%@", "")
+
+	// PaletteAsciiNormal is an ascii palette from lightest to darkest
+	PaletteASCIINormal = strings.Split("@%#*+=-:. ", "")
 )
 
 // Options contains optional parameters for converting an image to text
