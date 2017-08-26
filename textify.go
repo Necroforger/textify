@@ -126,7 +126,7 @@ func ColorToText(r, g, b uint32, palette []string) string {
 //		b: Blue value
 //		palette: Colour palette to use in order from darkest to brightest.
 func ColorToColoredTerminalText(r, g, b uint32, palette []string) string {
-	return rainbow.FromInt32(((r&0xff)<<16)|((g&0xff)<<8)|(b&0xff), palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)))])
+	return rainbow.FromInt32(((r&0xff)<<24)|((g&0xFF)<<16)|(b&0xFF)<<8, palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)))])
 }
 
 func cropImage(img image.Image, opts *Options) *image.NRGBA {
