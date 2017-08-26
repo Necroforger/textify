@@ -11,6 +11,13 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/nfnt/resize"
+	rainbow "github.com/raphamorim/go-rainbow"
+)
+
+// ColorModes
+const (
+	ColorDefault = iota
+	ColorTerminal
 )
 
 // Text palettes
@@ -31,6 +38,11 @@ var (
 // Options contains optional parameters for converting an image to text
 type Options struct {
 	Palette []string // Default: PaletteNormal
+
+	// Ouput options
+
+	// OutputMode is an integer representing the output mode to use.
+	ColorMode int // Default OutputDefault.
 
 	// Resize will resize the image to the supplied Width and Height dimensions when set to true
 	// If one of the width or height values is left as zero, but not both, it will be calculated
@@ -65,6 +77,7 @@ type Options struct {
 func NewOptions() *Options {
 	return &Options{
 		Palette:   PaletteNormal,
+		ColorMode: ColorDefault,
 		StrideW:   1,
 		StrideH:   2,
 		Resize:    false,
@@ -105,6 +118,15 @@ func EncodeGif(gi *gif.GIF, opts *Options) *GifDecoder {
 //		palette: Colour palette to use in order from darkest to brightest.
 func ColorToText(r, g, b uint32, palette []string) string {
 	return palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)))]
+}
+
+// ColorToColoredTerminalText returns text coloured for a terminal
+//		r: Red value
+//		g: Green value
+//		b: Blue value
+//		palette: Colour palette to use in order from darkest to brightest.
+func ColorToColoredTerminalText(r, g, b uint32, palette []string) string {
+	return rainbow.FromInt32((((r<<8)+g)<<8)+b, palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)))])
 }
 
 func cropImage(img image.Image, opts *Options) *image.NRGBA {

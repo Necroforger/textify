@@ -52,10 +52,20 @@ func (e Encoder) Encode(img image.Image, opts *Options) error {
 
 	bounds = img.Bounds()
 	w, h = bounds.Dx(), bounds.Dy()
+
+	var (
+		err     error
+		r, g, b uint32
+	)
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-			r, g, b, _ := img.At(x, y).RGBA()
-			_, err := e.Dest.Write([]byte(ColorToText(r, g, b, opts.Palette)))
+			r, g, b, _ = img.At(x, y).RGBA()
+			switch opts.ColorMode {
+			case ColorTerminal:
+				_, err = e.Dest.Write([]byte(ColorToColoredTerminalText(r, g, b, opts.Palette)))
+			default:
+				_, err = e.Dest.Write([]byte(ColorToText(r, g, b, opts.Palette)))
+			}
 			if err != nil {
 				return err
 			}

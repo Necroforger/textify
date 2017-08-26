@@ -31,6 +31,8 @@ var (
 	UseYTDL = flag.Bool("yt", false, "Use youtube-dl to download the video")
 	FPS     = flag.Float64("fps", 10, "Video fps")
 
+	ColorMode = flag.String("clr", "default", "clr=term for coloured terminal output")
+
 	PlayVideo = flag.Bool("pv", false, "Play the supplied video")
 	PlayGif   = flag.Bool("pg", false, "Play the supplied gif image")
 	PlayAudio = flag.Bool("pa", false, "Play audio using ffplay")
@@ -69,6 +71,11 @@ func main() {
 	Options.CropRight = *CropRight
 	Options.CropFirst = *CropFirst
 	Options.Palette = strings.Split(*Palette, "")
+
+	switch *ColorMode {
+	case "term":
+		Options.ColorMode = textify.ColorTerminal
+	}
 
 	// Initialize input stream
 	if flag.Arg(0) == "" {
