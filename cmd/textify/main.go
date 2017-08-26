@@ -70,11 +70,25 @@ func main() {
 	Options.CropLeft = *CropLeft
 	Options.CropRight = *CropRight
 	Options.CropFirst = *CropFirst
-	Options.Palette = strings.Split(*Palette, "")
+
+	switch strings.ToLower(*Palette) {
+	case "reverse":
+		Options.Palette = textify.PaletteReverse
+	case "normal", "norm":
+		Options.Palette = textify.PaletteNormal
+	case "ascii", "asciinorm", "asciin", "asciinormal":
+		Options.Palette = textify.PaletteASCIINormal
+	case "asciireverse", "asciir":
+		Options.Palette = textify.PaletteASCIIReverse
+	default:
+		Options.Palette = strings.Split(*Palette, "")
+	}
 
 	switch *ColorMode {
 	case "term":
 		Options.ColorMode = textify.ColorTerminal
+	case "HTML":
+		Options.ColorMode = textify.ColorHTMLColored
 	}
 
 	// Initialize input stream

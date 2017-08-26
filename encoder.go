@@ -57,12 +57,22 @@ func (e Encoder) Encode(img image.Image, opts *Options) error {
 		err     error
 		r, g, b uint32
 	)
+
+	switch opts.ColorMode {
+	case ColorHTML, ColorHTMLColored:
+		_, err = e.Dest.Write([]byte(`<html><body style='background-color: #000000'><p style='font-family: "Courier New", Courier, monospace'>`))
+	}
+	if err != nil {
+		return err
+	}
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			r, g, b, _ = img.At(x, y).RGBA()
 			switch opts.ColorMode {
 			case ColorTerminal:
 				_, err = e.Dest.Write([]byte(ColorToColoredTerminalText(r, g, b, opts.Palette)))
+			case ColorHTMLColored:
+				_, err = e.Dest.Write([]byte(ColorToColoredHTML(r, g, b, opts.Palette)))
 			default:
 				_, err = e.Dest.Write([]byte(ColorToText(r, g, b, opts.Palette)))
 			}
@@ -75,5 +85,14 @@ func (e Encoder) Encode(img image.Image, opts *Options) error {
 			return err
 		}
 	}
+
+	switch opts.ColorMode {
+	case ColorHTML, ColorHTMLColored:
+		_, err = e.Dest.Write([]byte(`</p></body></html>`))
+	}
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

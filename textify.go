@@ -3,6 +3,7 @@ package textify
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"image"
 	"io"
 	"strings"
@@ -18,6 +19,8 @@ import (
 const (
 	ColorDefault = iota
 	ColorTerminal
+	ColorHTML
+	ColorHTMLColored
 )
 
 // Text palettes
@@ -127,6 +130,15 @@ func ColorToText(r, g, b uint32, palette []string) string {
 //		palette: Colour palette to use in order from darkest to brightest.
 func ColorToColoredTerminalText(r, g, b uint32, palette []string) string {
 	return rainbow.FromInt32(((r&0xff)<<24)|((g&0xFF)<<16)|(b&0xFF)<<8, palette[int((float32((r+g+b)/3)/65536.0)*float32(len(palette)))])
+}
+
+// ColorToColoredHTML returns text coloured for html
+//		r: Red value
+//		g: Green value
+//		b: Blue value
+//		palette: Colour palette to use in order from darkest to brightest.
+func ColorToColoredHTML(r, g, b uint32, palette []string) string {
+	return "<span style='color: " + fmt.Sprintf("rgb(%d, %d, %d)'", r>>8, g>>8, b>>8) + ">" + ColorToText(r, g, b, palette) + "</span>"
 }
 
 func cropImage(img image.Image, opts *Options) *image.NRGBA {
