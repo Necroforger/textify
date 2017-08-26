@@ -84,10 +84,10 @@ func main() {
 		Options.Palette = strings.Split(*Palette, "")
 	}
 
-	switch *ColorMode {
+	switch strings.ToLower(*ColorMode) {
 	case "term":
 		Options.ColorMode = textify.ColorTerminal
-	case "HTML":
+	case "html":
 		Options.ColorMode = textify.ColorHTMLColored
 	}
 

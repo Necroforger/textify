@@ -59,8 +59,9 @@ func (e Encoder) Encode(img image.Image, opts *Options) error {
 	)
 
 	switch opts.ColorMode {
+	// Begin HTML Tags
 	case ColorHTML, ColorHTMLColored:
-		_, err = e.Dest.Write([]byte(`<html><body style='background-color: #000000'><p style='font-family: "Courier New", Courier, monospace'>`))
+		_, err = e.Dest.Write([]byte(`<html><head><style>span{display: inline-block; white-space: nowrap; text-align: center; height: 18px; width: 9px;}</style></head><body style='background-color: #000000'><span style='font-family: "Courier New", Courier, monospace'>`))
 	}
 	if err != nil {
 		return err
@@ -80,15 +81,22 @@ func (e Encoder) Encode(img image.Image, opts *Options) error {
 				return err
 			}
 		}
-		_, err := e.Dest.Write([]byte("\r\n"))
+		switch opts.ColorMode {
+		case ColorHTML, ColorHTMLColored:
+			_, err = e.Dest.Write([]byte("<br>"))
+		default:
+			_, err = e.Dest.Write([]byte("\r\n"))
+		}
 		if err != nil {
 			return err
 		}
+
 	}
 
 	switch opts.ColorMode {
+	// Close HTML Tags
 	case ColorHTML, ColorHTMLColored:
-		_, err = e.Dest.Write([]byte(`</p></body></html>`))
+		_, err = e.Dest.Write([]byte(`</span></body></html>`))
 	}
 	if err != nil {
 		return err
