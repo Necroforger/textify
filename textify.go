@@ -147,7 +147,7 @@ func cropImage(img image.Image, opts *Options) *image.NRGBA {
 		w      = bounds.Dx()
 		h      = bounds.Dy()
 	)
-	return imaging.Crop(img, image.Rect(int(opts.CropLeft), int(opts.CropTop), w-int(opts.CropLeft), h-int(opts.CropRight)))
+	return imaging.Crop(img, image.Rect(int(opts.CropLeft), int(opts.CropTop), w-int(opts.CropRight), h-int(opts.CropBottom)))
 }
 
 func resizeImage(img image.Image, opts *Options) image.Image {
